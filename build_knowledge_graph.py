@@ -14,7 +14,7 @@ DOCS_PATH = "./data/pdfs"
 
 llm = GoogleGenerativeAI(
     #model="gemini-2.0-flash-lite",
-    model="models/gemini-1.5-pro-001",
+    model="models/gemini-1.5-flash-latest",
     google_api_key=os.getenv("GOOGLE_API_KEY"),
     temperature=0
 )
@@ -23,6 +23,14 @@ embedding_provider = GoogleGenerativeAIEmbeddings(
     google_api_key=os.getenv('GOOGLE_API_KEY'),
     model="models/text-embedding-004"
     )
+
+#dynamically get embedding dimension
+def get_embedding_dimension(embedding_provider):
+    test_vector = embedding_provider.embed_query("test")
+    return len(test_vector)
+#note - add this to the cypher query at bottom
+DIMENSION_SIZE = get_embedding_dimension(embedding_provider)  # Get dynamic dimension
+
 
 graph = Neo4jGraph(
     url=os.getenv('NEO4J_URI'),
@@ -72,10 +80,8 @@ for chunk in chunks:
 
     #generate entities and relationships from the chunk
     graph_docs = doc_transformer.convert_to_graph_documents([chunk])
-    print("hi1")
     #map the entities in the graph documents to the chunk node
     for graph_doc in graph_docs:
-        print("hi2")
         chunk_node = Node(
             id=chunk_id,
             type="Chunk"
@@ -93,7 +99,6 @@ for chunk in chunks:
 
     # add the graph documents to the graph
     graph.add_graph_documents(graph_docs)
-    print(graph)
 
 #create the vector index
 graph.query("""
@@ -101,8 +106,9 @@ graph.query("""
     IF NOT EXISTS
     FOR (c: Chunk) ON (c.textEmbedding)
     OPTIONS {indexConfig: {
-    `vector.dimensions`: 1536,
-    `vector.similarity_function`: 'cosine'
-    }};""")
 
-print("Neo4j Response:", result)
+    `vector.dimensions`: 768,
+    `vector.similarity_function`: 'cosine'
+
+    }};
+    """)
