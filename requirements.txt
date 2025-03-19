@@ -6,3 +6,5 @@ langchain-experimental==0.3.3
 langchain-neo4j==0.1.1
 neo4j==5.27.0
 python-dotenv==1.0.1
+json-repair
+pypdf==4.3.1
