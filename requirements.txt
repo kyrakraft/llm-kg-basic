@@ -8,3 +8,4 @@ neo4j==5.27.0
 python-dotenv==1.0.1
 json-repair
 pypdf==4.3.1
+pandas
